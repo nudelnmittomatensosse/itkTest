@@ -1,6 +1,12 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(itktest)
 
-add_executable(itktest main.cpp)
+
+find_package(ITK REQUIRED)
+include(${ITK_USE_FILE})
+
+add_executable(itktest main.cpp ReadDicomSeriesTest.cpp)
+
+target_link_libraries(itktest ${ITK_LIBRARIES})
 
 install(TARGETS itktest RUNTIME DESTINATION bin)
