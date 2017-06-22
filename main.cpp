@@ -7,10 +7,10 @@ int main(int argc, char **argv) {
     {
         dirName = argv[1];
     }
-    
+
     ReadDicomSeriesTest dicomTest;
     dicomTest.readImageSeriesFromDirectory(dirName);
-    
-    
+
+
     return EXIT_SUCCESS;
 }
