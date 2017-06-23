@@ -8,18 +8,31 @@
 
 
 #include "gdcmScanner.h"
+#include "itkGDCMSeriesFileNames.h"
 
 class ReadDicomSeriesTest
 {
 public:
     
+    typedef itk::GDCMSeriesFileNames NamesGeneratorType;
+    typedef std::string SeriesUID;
     typedef gdcm::Directory::FilenamesType FileNameContainer;
+    
+    
+    ReadDicomSeriesTest();
+    
+    void setDirectory(const std::string& dirName);
     
     void scanFilesForTags(const FileNameContainer& filenames);
     
-    void readImageSeriesFromDirectory(const std::string& dirName);
+    void readImageSeriesFromDirectory();
+    
+    const FileNameContainer& getFileNamesForSeriesUID(const SeriesUID& uid) const;
     
 private:
+    std::string dirName;
+    NamesGeneratorType::Pointer namesGenerator;
+    
     typedef std::unique_ptr<gdcm::Scanner> ScannerPointer;
     
 };

@@ -13,49 +13,86 @@
 
 #include "gdcmScanner.h"
 
-void ReadDicomSeriesTest::scanFilesForTags(const FileNameContainer& filenames)
+
+
+ReadDicomSeriesTest::ReadDicomSeriesTest()
+    :dirName(".")
 {
-    const gdcm::Tag tag_array[] = {
-        gdcm::Tag(0x8,0x50),
-        gdcm::Tag(0x8,0x51),
-        gdcm::Tag(0x8,0x60),
-    };
+    this->namesGenerator=NamesGeneratorType::New();
     
-    std::unique_ptr<gdcm::Scanner> fileScanner(new gdcm::Scanner());
-    for (auto tag:tag_array)
-    {
-        fileScanner->AddTag(tag);                
-    }
-    
-    if( fileScanner->Scan( filenames ) )
-    {
-        
-        
-    }
-    
+}
+
+void ReadDicomSeriesTest::setDirectory(const std::string& dirName)
+{
+    this->dirName=dirName;
+    this->namesGenerator->SetDirectory(dirName);
     
 }
 
 
+void ReadDicomSeriesTest::scanFilesForTags(const FileNameContainer& filenames)
+{
+    const gdcm::Tag tag_array[] = {
+        gdcm::Tag(0x8,0x8),
+        gdcm::Tag(0x20,0x11),
+        gdcm::Tag(0x10,0x10),
+    };
+
+    std::unique_ptr<gdcm::Scanner> fileScanner(new gdcm::Scanner());
+    for (auto tag:tag_array)
+    {
+        fileScanner->AddTag(tag);
+    }
+
+    if( fileScanner->Scan( filenames ) )
+    {
+        FileNameContainer::const_iterator currFileIter=filenames.begin();
+        while (currFileIter != filenames.end())
+        {
+            std::cout << currFileIter->c_str() << std::endl;
+
+            gdcm::Scanner::TagToValue const &ttv = fileScanner->GetMapping(currFileIter->c_str());
+            for (auto tag:tag_array)
+            {
+                gdcm::Scanner::TagToValue::const_iterator it = ttv.find( tag );
+                if( it != ttv.end() )
+                {
+                    const char *value = it->second;
+                    if( *value )
+                    {
+                        std::cout << tag << "  has the value: " << value << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << tag << " has no value (empty)" << std::endl;
+                    }
+                }
+                else
+                {
+                    std::cout << tag << " could not be found in this file" << std::endl;
+                }
 
 
-void ReadDicomSeriesTest::readImageSeriesFromDirectory(const std::string& dirName)
+            }
+            currFileIter++;
+        }
+
+    }
+
+}
+
+
+void ReadDicomSeriesTest::readImageSeriesFromDirectory()
 {
     typedef short    PixelType;
     const unsigned int      Dimension = 3;
     typedef itk::Image< PixelType, Dimension >         ImageType;
     typedef itk::ImageSeriesReader< ImageType >        ReaderType;
 
-
-    typedef itk::GDCMSeriesFileNames NamesGeneratorType;
-    NamesGeneratorType::Pointer nameGenerator = NamesGeneratorType::New();
-
-    nameGenerator->SetDirectory(dirName);
-
     try
     {
-        typedef std::vector< std::string >    SeriesIdContainer;
-        const SeriesIdContainer & seriesUID = nameGenerator->GetSeriesUIDs();
+        typedef std::vector< SeriesUID>    SeriesIdContainer;
+        const SeriesIdContainer & seriesUID = this->namesGenerator->GetSeriesUIDs();
         SeriesIdContainer::const_iterator seriesItr = seriesUID.begin();
         SeriesIdContainer::const_iterator seriesEnd = seriesUID.end();
 
@@ -82,7 +119,7 @@ void ReadDicomSeriesTest::readImageSeriesFromDirectory(const std::string& dirNam
         ImageIOType::Pointer dicomIO = ImageIOType::New();
         reader->SetImageIO(dicomIO);
         seriesItr = seriesUID.begin();
-        reader->SetFileNames(nameGenerator->GetFileNames(seriesItr->c_str()));
+        reader->SetFileNames(this->getFileNamesForSeriesUID(*seriesItr));
 
         itk::NiftiImageIO::Pointer nifti_io = itk::NiftiImageIO::New();
 
@@ -100,3 +137,11 @@ void ReadDicomSeriesTest::readImageSeriesFromDirectory(const std::string& dirNam
     }
 
 }
+
+const ReadDicomSeriesTest::FileNameContainer&
+    ReadDicomSeriesTest::getFileNamesForSeriesUID(const SeriesUID& uid) const
+{
+    return this->namesGenerator->GetFileNames(uid.c_str());
+    
+}
+
