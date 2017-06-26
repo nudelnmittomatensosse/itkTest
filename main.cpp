@@ -22,6 +22,8 @@ int main(int argc, char **argv) {
     const gdcm::Directory::FilenamesType &l1 = d.GetFilenames();
     dicomTest.scanFilesForTags(l1);
 
+    dicomTest.importMosaicFile("/home/florian/projects/ITKtest/raw_dicom_files/012_0014_mreepi-40Hz_20170615-153515.ima");
+
 
 
 

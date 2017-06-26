@@ -26,6 +26,8 @@ public:
     void scanFilesForTags(const FileNameContainer& filenames);
     
     void readImageSeriesFromDirectory();
+
+    void importMosaicFile(const std::string& fileName);
     
     const FileNameContainer& getFileNamesForSeriesUID(const SeriesUID& uid) const;
     

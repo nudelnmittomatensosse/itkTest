@@ -12,6 +12,10 @@
 #include "itkImageFileWriter.h"
 
 #include "gdcmScanner.h"
+#include <gdcmSplitMosaicFilter.h>
+#include "gdcmReader.h"
+#include "gdcmImageReader.h"
+#include "gdcmImageWriter.h"
 
 
 
@@ -143,5 +147,35 @@ const ReadDicomSeriesTest::FileNameContainer&
 {
     return this->namesGenerator->GetFileNames(uid.c_str());
     
+}
+
+void ReadDicomSeriesTest::importMosaicFile(const std::string &fileName)
+{
+    gdcm::Reader readerHeader;
+    readerHeader.SetFileName( fileName.c_str() );
+    gdcm::ImageReader readerImage;
+    readerImage.SetFileName(fileName.c_str() );
+    if( readerHeader.Read() &&  readerImage.Read())
+    {
+       const gdcm::File &file1 = readerHeader.GetFile();
+       gdcm::SplitMosaicFilter filter;
+       filter.SetFile(file1);
+       filter.SetImage(readerImage.GetImage());
+       if (filter.Split())
+       {
+           std::cout << "MOSAIC is split." << std::endl;
+           gdcm::ImageWriter writer;
+           writer.SetFile(filter.GetFile());
+           writer.SetImage(filter.GetImage());
+           writer.SetFileName( "splitMosaic.dcm" );
+           if( writer.Write() )
+           {
+               std::cout << "Split Mosaic was written." << std::endl;
+           }
+       }
+    }
+
+
+
 }
 
